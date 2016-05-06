@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Memory Leaks</string>
+    <string name="async_task">Async Task</string>
+    <string name="static_activity">Static Activity</string>
+    <string name="handler">Handler</string>
+    <string name="inner_class">Inner Class</string>
+    <string name="static_view">Static View</string>
+    <string name="sensor_manager">Sensor Manager</string>
+    <string name="thread">Thread</string>
+    <string name="timer_task">Timer Task</string>
+</resources>
