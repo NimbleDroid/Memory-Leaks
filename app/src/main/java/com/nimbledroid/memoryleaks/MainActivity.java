@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     void nextActivity() {
         Intent intent = new Intent(this, DestinationActivity.class);
         startActivity(intent);
-        SystemClock.sleep(500);
+        SystemClock.sleep(600);
         finish();
     }
 
