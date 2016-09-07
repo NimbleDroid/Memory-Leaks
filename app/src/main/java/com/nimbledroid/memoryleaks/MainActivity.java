@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static View view;
     private SensorManager sensorManager;
     private Sensor sensor;
+    private Thread thread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,9 +92,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onDestroy() {
         super.onDestroy();
         if (sensor != null) {
-          unregisterListener();
+            unregisterListener();
         } else if (view != null) {
-          unsetStaticView();
+            unsetStaticView();
+        } else if (thread != null) {
+            thread.interrupt();
         }
     }
 
@@ -134,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private static class NimbleRunnable implements Runnable {
         @Override public void run() {
-          while(true);
+            while(true);
         }
     }
 
@@ -166,14 +169,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.unregisterListener(this, sensor);
     }
 
-    private static class NimbleThread extends Thread {
-        @Override public void run() {
-            while(true);
-        }
-    }
-
     void spawnThread() {
-        new NimbleThread().start();
+        thread = new Thread() {
+            @Override public void run() {
+                while (!isInterrupted()) {
+                }
+            }
+        };
+        thread.start();
     }
 
     private static class NimbleTimerTask extends TimerTask {
