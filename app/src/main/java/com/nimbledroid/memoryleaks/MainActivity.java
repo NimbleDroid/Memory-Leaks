@@ -13,14 +13,18 @@ import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import java.lang.ref.WeakReference;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static MainActivity activity;
-    private static Object inner;
+    private static WeakReference<MainActivity> activityReference;
+    private Object inner;
     private static View view;
+    private SensorManager sensorManager;
+    private Sensor sensor;
+    private Thread thread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +89,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (sensor != null) {
+            unregisterListener();
+        } else if (view != null) {
+            unsetStaticView();
+        } else if (thread != null) {
+            thread.interrupt();
+        }
+    }
+
+    @Override
     public void onSensorChanged(SensorEvent event) {
     }
 
@@ -99,28 +115,34 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         finish();
     }
 
+    private static class NimbleTask extends AsyncTask<Void, Void, Void> {
+        @Override protected Void doInBackground(Void... params) {
+            while(true);
+        }
+    }
+
     void startAsyncTask() {
-        new AsyncTask<Void, Void, Void>() {
-            @Override protected Void doInBackground(Void... params) {
-                while(true);
-            }
-        }.execute();
+        new NimbleTask().execute();
     }
 
     void setStaticActivity() {
-        activity = this;
+        activityReference = new WeakReference<MainActivity>(this);
+    }
+
+    private static class NimbleHandler extends Handler {
+        @Override public void handleMessage(Message message) {
+            super.handleMessage(message);
+        }
+    }
+
+    private static class NimbleRunnable implements Runnable {
+        @Override public void run() {
+            while(true);
+        }
     }
 
     void createHandler() {
-        new Handler() {
-            @Override public void handleMessage(Message message) {
-                super.handleMessage(message);
-            }
-        }.postDelayed(new Runnable() {
-            @Override public void run() {
-                while(true);
-            }
-        }, Long.MAX_VALUE >> 1);
+        new NimbleHandler().postDelayed(new NimbleRunnable(), Long.MAX_VALUE >> 1);
     }
 
     void createInnerClass() {
@@ -133,26 +155,37 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         view = findViewById(R.id.sv_button);
     }
 
+    void unsetStaticView() {
+        view = null;
+    }
+
     void registerListener() {
-        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ALL);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ALL);
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
+    void unregisterListener() {
+        sensorManager.unregisterListener(this, sensor);
+    }
+
     void spawnThread() {
-        new Thread() {
+        thread = new Thread() {
             @Override public void run() {
-                while(true);
+                while (!isInterrupted()) {
+                }
             }
-        }.start();
+        };
+        thread.start();
+    }
+
+    private static class NimbleTimerTask extends TimerTask {
+        @Override public void run() {
+            while(true);
+        }
     }
 
     void scheduleTimer() {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                while(true);
-            }
-        }, Long.MAX_VALUE >> 1);
+        new Timer().schedule(new NimbleTimerTask(), Long.MAX_VALUE >> 1);
     }
 }
